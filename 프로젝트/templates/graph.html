@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>📊 데이터 시각화</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #eef2ff; padding: 40px; }
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .graph-box { margin-bottom: 50px; }
+        h1, h2 { margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 데이터 시각화</h1>
+        <p>영화 선호도 및 얼굴 특징 분포를 그래프로 확인해보세요.</p>
+
+        <div class="graph-box">
+            <h2>🎬 장르 선호도</h2>
+            <img src="data:image/png;base64,{{ genre_plot }}" alt="장르 그래프">
+        </div>
+
+        <div class="graph-box">
+            <h2>🧠 감정별 장르 분포</h2>
+            <img src="data:image/png;base64,{{ emotion_plot }}" alt="감정 그래프">
+        </div>
+
+        <div class="graph-box">
+            <h2>👤 얼굴형별 장르 분포</h2>
+            <img src="data:image/png;base64,{{ face_plot }}" alt="얼굴형 그래프">
+        </div>
+    </div>
+</body>
+</html>

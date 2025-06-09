@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎭 AI 얼굴 분석 & 장르 추천</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        .upload-section {
+            margin-bottom: 30px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 20px;
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(102, 126, 234, 0.05);
+            position: relative;
+        }
+
+        .file-input-label:hover {
+            border-color: #764ba2;
+            background: rgba(118, 75, 162, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .file-input-label.has-file {
+            border-color: #28a745;
+            background: rgba(40, 167, 69, 0.1);
+        }
+
+        .file-input-label i {
+            font-size: 2em;
+            color: #667eea;
+            margin-bottom: 10px;
+            display: block;
+            transition: all 0.3s ease;
+        }
+
+        .file-input-label.has-file i {
+            color: #28a745;
+        }
+
+        .file-input-label span {
+            color: #333;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .file-input-label.has-file span {
+            color: #28a745;
+        }
+
+        .upload-success {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #28a745;
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            animation: checkmark 0.5s ease-in-out;
+        }
+
+        @keyframes checkmark {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .preview-container {
+            margin-top: 15px;
+            display: none;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .file-info {
+            background: #e8f5e8;
+            border: 1px solid #c8e6c9;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #2e7d32;
+            display: none;
+        }
+
+        .genre-section {
+            margin-bottom: 30px;
+            text-align: left;
+        }
+
+        .genre-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 1.3em;
+        }
+
+        .genre-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .genre-item {
+            position: relative;
+        }
+
+        .genre-checkbox {
+            display: none;
+        }
+
+        .genre-label {
+            display: block;
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .genre-checkbox:checked + .genre-label {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .genre-label:hover {
+            border-color: #667eea;
+            transform: translateY(-1px);
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .submit-btn.loading {
+            background: #6c757d;
+        }
+
+        .nav-links {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .nav-link {
+            color: #667eea;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .nav-link:hover {
+            background: rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+
+        .flash-message {
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .flash-error {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+        }
+
+        .flash-warning {
+            background: #fff8e1;
+            color: #f57f17;
+            border: 1px solid #ffecb3;
+        }
+
+        .flash-success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+
+        .flash-info {
+            background: #e3f2fd;
+            color: #1565c0;
+            border: 1px solid #bbdefb;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .loading-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .genre-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎭 AI 얼굴 분석</h1>
+            <p>사진을 업로드하여 나이, 성별, 감정을 분석하고<br>맞춤 장르를 추천받으세요!</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form action="/upload" method="post" enctype="multipart/form-data" id="uploadForm">
+            <div class="upload-section">
+                <div class="file-input-wrapper">
+                    <input type="file" id="photo" name="photo" class="file-input" accept="image/*" required>
+                    <label for="photo" class="file-input-label" id="fileLabel">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <span id="labelText">사진 선택하기</span>
+                    </label>
+                    <div class="upload-success" id="uploadSuccess">
+                        <i class="fas fa-check"></i>
+                    </div>
+                </div>
+                
+                <div class="preview-container" id="previewContainer">
+                    <img id="previewImage" class="preview-image" alt="미리보기">
+                </div>
+                
+                <div class="file-info" id="fileInfo"></div>
+            </div>
+
+            <div class="genre-section">
+                <h3>📽️ 좋아하는 장르를 선택하세요</h3>
+                <div class="genre-grid">
+                    <div class="genre-item">
+                        <input type="checkbox" id="comedy" name="genre" value="코미디" class="genre-checkbox">
+                        <label for="comedy" class="genre-label">🤣 코미디</label>
+                    </div>
+                    <div class="genre-item">
+                        <input type="checkbox" id="horror" name="genre" value="공포" class="genre-checkbox">
+                        <label for="horror" class="genre-label">👻 공포</label>
+                    </div>
+                    <div class="genre-item">
+                        <input type="checkbox" id="drama" name="genre" value="드라마" class="genre-checkbox">
+                        <label for="drama" class="genre-label">🎭 드라마</label>
+                    </div>
+                    <div class="genre-item">
+                        <input type="checkbox" id="action" name="genre" value="액션" class="genre-checkbox">
+                        <label for="action" class="genre-label">🔥 액션</label>
+                    </div>
+                    <div class="genre-item">
+                        <input type="checkbox" id="romance" name="genre" value="로맨스" class="genre-checkbox">
+                        <label for="romance" class="genre-label">💕 로맨스</label>
+                    </div>
+                    <div class="genre-item">
+                        <input type="checkbox" id="thriller" name="genre" value="스릴러" class="genre-checkbox">
+                        <label for="thriller" class="genre-label">😱 스릴러</label>
+                    </div>
+                    <div class="genre-item">
+                        <input type="checkbox" id="sf" name="genre" value="SF" class="genre-checkbox">
+                        <label for="sf" class="genre-label">🚀 SF</label>
+                    </div>
+                    <div class="genre-item">
+                        <input type="checkbox" id="fantasy" name="genre" value="판타지" class="genre-checkbox">
+                        <label for="fantasy" class="genre-label">🧙 판타지</label>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">
+                <i class="fas fa-magic"></i> AI 분석 시작하기
+            </button>
+        </form>
+
+        <div class="nav-links">
+            <a href="/graph" class="nav-link">
+                <i class="fas fa-chart-bar"></i> 통계
+            </a>
+            <a href="/recommend" class="nav-link">
+                <i class="fas fa-thumbs-up"></i> 추천
+            </a>
+            <a href="/admin" class="nav-link">
+                <i class="fas fa-cog"></i> 관리
+            </a>
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <i class="fas fa-brain fa-3x" style="color: #667eea; margin-bottom: 20px;"></i>
+            <h3>AI가 분석 중입니다...</h3>
+            <p>잠시만 기다려주세요</p>
+        </div>
+    </div>
+
+    <script>
+        // 파일 선택 처리
+        document.getElementById('photo').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const label = document.getElementById('fileLabel');
+            const labelText = document.getElementById('labelText');
+            const uploadSuccess = document.getElementById('uploadSuccess');
+            const previewContainer = document.getElementById('previewContainer');
+            const previewImage = document.getElementById('previewImage');
+            const fileInfo = document.getElementById('fileInfo');
+
+            if (file) {
+                // 파일 크기 검증 (5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('파일 크기는 5MB 이하여야 합니다.');
+                    e.target.value = '';
+                    return;
+                }
+
+                // 파일 타입 검증
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+                if (!allowedTypes.includes(file.type)) {
+                    alert('PNG, JPG, JPEG 파일만 업로드 가능합니다.');
+                    e.target.value = '';
+                    return;
+                }
+
+                // UI 업데이트
+                label.classList.add('has-file');
+                labelText.textContent = '파일 선택 완료!';
+                uploadSuccess.style.display = 'flex';
+
+                // 미리보기 이미지 표시
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+
+                // 파일 정보 표시
+                const fileSize = (file.size / 1024 / 1024).toFixed(2);
+                fileInfo.innerHTML = `
+                    <strong>파일명:</strong> ${file.name}<br>
+                    <strong>크기:</strong> ${fileSize}MB<br>
+                    <strong>형식:</strong> ${file.type}
+                `;
+                fileInfo.style.display = 'block';
+            } else {
+                // 초기화
+                label.classList.remove('has-file');
+                labelText.textContent = '사진 선택하기';
+                uploadSuccess.style.display = 'none';
+                previewContainer.style.display = 'none';
+                fileInfo.style.display = 'none';
+            }
+        });
+
+        // 폼 제출 처리
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            const fileInput = document.getElementById('photo');
+            const submitBtn = document.getElementById('submitBtn');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+
+            if (!fileInput.files[0]) {
+                e.preventDefault();
+                alert('사진을 선택해주세요!');
+                return;
+            }
+
+            // 로딩 상태 표시
+            submitBtn.disabled = true;
+            submitBtn.classList.add('loading');
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 분석 중...';
+            loadingOverlay.style.display = 'flex';
+        });
+
+        // 드래그 앤 드롭 기능
+        const fileLabel = document.getElementById('fileLabel');
+        const fileInput = document.getElementById('photo');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileLabel.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileLabel.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileLabel.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            fileLabel.style.borderColor = '#764ba2';
+            fileLabel.style.background = 'rgba(118, 75, 162, 0.1)';
+        }
+
+        function unhighlight(e) {
+            fileLabel.style.borderColor = '#667eea';
+            fileLabel.style.background = 'rgba(102, 126, 234, 0.05)';
+        }
+
+        fileLabel.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length > 0) {
+                fileInput.files = files;
+                fileInput.dispatchEvent(new Event('change'));
+            }
+        }
+    </script>
+</body>
+</html>
